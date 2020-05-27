@@ -1,0 +1,13 @@
+export const list = new Map([
+  ['@channel', '<!channel>'],
+  ['@here', '<!here>'],
+  ['@your[-0-9A-Za-z]*', '<@UXXXXXXXX>'],
+  ['あなたさん', '<@UXXXXXXXX>'],
+]);
+
+export const statuslist = new Map([
+  ["1", '未対応'],
+  ["2", '処理中'],
+  ["3", '処理済み'],
+  ["4", '完了'],
+]);
