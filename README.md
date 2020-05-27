@@ -17,6 +17,7 @@ $ firebase use --add
 $ cp ./env.prod.json.sample ./env.prod.json
 $ cp ./env.prod.json.sample ./env.dev.json
 // backlogのコメント欄に書かれたメンションをslackのuuidに変換したい場合に設定できます。編集してください。
+// ステータス
 $ cp ./src/config.ts.sample ./src/gonfig.ts
 ```
 

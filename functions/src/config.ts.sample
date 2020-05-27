@@ -1,4 +1,4 @@
-export const list = new Map([
+export const mentionlist = new Map([
   ['@channel', '<!channel>'],
   ['@here', '<!here>'],
   ['@your[-0-9A-Za-z]*', '<@UXXXXXXXX>'],
