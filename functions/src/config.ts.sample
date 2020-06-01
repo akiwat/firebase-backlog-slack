@@ -11,3 +11,9 @@ export const statuslist = new Map([
   ["3", '処理済み'],
   ["4", '完了'],
 ]);
+
+export const prstatuslist = new Map([
+  ["1", 'Open'],
+  ["2", 'Rejected'],
+  ["3", 'Merged']
+]);
