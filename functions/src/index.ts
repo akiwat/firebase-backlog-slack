@@ -4,6 +4,7 @@ const fs = require('fs');
 const config = require('./config');
 const mentions: Map<string, string> = config.mentionlist;
 const statuslist: Map<string, string> = config.statuslist;
+const prstatuslist: Map<string, string> = config.prstatuslist;
 
 export const backlog = functions.https.onRequest((req, res) => {
     if (req.method !== 'POST') {
@@ -237,11 +238,13 @@ export const backlog = functions.https.onRequest((req, res) => {
                 for (let change of body.content.changes) {
                     if (change.field == 'status') {
                         const new_value: string = statuslist.get(change.new_value.toString()) ? statuslist.get(change.new_value.toString()) : change.new_value.toString();
-
                         text += `\`ステータス： -> ${new_value}\`\n`;
                     }
                     if (change.field == 'assigner') {
                         text += `\`担当者： -> ${change.new_value}\`\n`;
+                    }
+                    if (change.field == 'milestone') {
+                        text += `\`マイルストーン： -> ${change.new_value}\`\n`;
                     }
                 }
                 text +='\n';
@@ -251,8 +254,6 @@ export const backlog = functions.https.onRequest((req, res) => {
                     // text += `<${linkurl}|[${body.project.projectKey}-${link.key_id}]${link.title}>` + '\n';
                     text += `<${linkurl}|[${body.project.projectKey}-${link.key_id}]> ` + link.title +'\n';
                 }
-
-
 
                 break;
             case 15:
@@ -324,7 +325,10 @@ export const backlog = functions.https.onRequest((req, res) => {
                 }
                 for (let change of body.content.changes) {
                     if (change.field == 'status') {
-                        text += `\`ステータス：${change.old_value} -> ${change.new_value}\`\n`;
+                        const old_value: string = prstatuslist.get(change.old_value.toString()) ? prstatuslist.get(change.old_value.toString()) : change.old_value.toString();
+                        const new_value: string = prstatuslist.get(change.new_value.toString()) ? prstatuslist.get(change.new_value.toString()) : change.new_value.toString();
+
+                        text += `\`ステータス：${old_value} -> ${new_value}\`\n`;
                     }
                     if (change.field == 'assignee') {
                         text += `\`担当者：${change.old_value} -> ${change.new_value}\`\n`;
@@ -358,20 +362,14 @@ export const backlog = functions.https.onRequest((req, res) => {
             case 22:
                 label = 'マイルストーンの追加'
                 // 投稿メッセージを整形
-                url = `${backlog_url}/view/${body.project.projectKey}-${body.content.key_id}`;
-                if (body.content.comment != null && body.content.comment.id != null) {
-                    url += `#comment-${body.content.comment.id}`;
+                pretext = `*Backlog ${label}* _by ${body.createdUser.name}_\n`;
+                pretext += `[${body.project.projectKey}]`;
+                if (body.content != null && body.content.name != null) {
+                    text = `${body.content.name}\n`;
                 }
-
-                pretext = `*Backlog ${label}*\n`;
-                pretext += `[${body.project.projectKey}-${body.content.key_id}] - `;
-                pretext += `${body.content.summary} _by ${body.createdUser.name}_`;
-                if (body.content.comment != null && body.content.comment?.content != null) {
-                    text = `${body.content.comment.content}\n`;
-                }
-                text += `${url}`;
                 break;
             case 23:
+                // TODO undefinedが出るはず　未対応
                 label = 'マイルストーンの更新'
                 // 投稿メッセージを整形
                 url = `${backlog_url}/view/${body.project.projectKey}-${body.content.key_id}`;
@@ -379,7 +377,7 @@ export const backlog = functions.https.onRequest((req, res) => {
                     url += `#comment-${body.content.comment.id}`;
                 }
 
-                pretext = `*Backlog ${label}*\n`;
+                pretext = `*Backlog ${label}* _by ${body.createdUser.name}_\n`;
                 pretext += `[${body.project.projectKey}-${body.content.key_id}] - `;
                 pretext += `${body.content.summary} _by ${body.createdUser.name}_`;
                 if (body.content.comment != null && body.content.comment?.content != null) {
@@ -388,6 +386,7 @@ export const backlog = functions.https.onRequest((req, res) => {
                 text += `${url}`;
                 break;
             case 24:
+                // TODO undefinedが出るはず　未対応
                 label = 'マイルストーンの削除';
                 // 投稿メッセージを整形
                 url = `${backlog_url}/view/${body.project.projectKey}-${body.content.key_id}`;
