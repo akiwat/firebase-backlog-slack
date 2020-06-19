@@ -323,6 +323,9 @@ export const backlog = functions.https.onRequest((req, res) => {
                 if (body.content.comment != null && body.content.comment?.content != null) {
                     text = `${body.content.comment.content}\n`;
                 }
+                if (body.content.diff != null) {
+                    text += `\n${body.content.diff}\n`
+                }
                 for (let change of body.content.changes) {
                     if (change.field == 'status') {
                         const old_value: string = prstatuslist.get(change.old_value.toString()) ? prstatuslist.get(change.old_value.toString()) : change.old_value.toString();
@@ -433,6 +436,7 @@ export const backlog = functions.https.onRequest((req, res) => {
         json: true,
         body: data
     };
+    
     request.post(options, function (err: any) {
         if (err != null) {
             console.log(err);
