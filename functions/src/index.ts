@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v2';
 const request = require('request');
 const fs = require('fs');
 const config = require('./config');
@@ -16,10 +16,17 @@ export const backlog = functions.https.onRequest((req, res) => {
         return;
     }
 
-    let env = functions.config().env;
+    let env = process.env;
 
     if (process.env.NODE_ENV !== 'production') {
         const localenvpath = __dirname + '/../env.dev.json';
+        if (fs.existsSync(localenvpath)) {
+            env = require(localenvpath);
+            console.log('Loaded local env: ' + localenvpath);
+        }
+    }
+    else{
+        const localenvpath = __dirname + '/../env.prod.json';
         if (fs.existsSync(localenvpath)) {
             env = require(localenvpath);
             console.log('Loaded local env: ' + localenvpath);
