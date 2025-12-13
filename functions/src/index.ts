@@ -1,12 +1,12 @@
-import * as functions from 'firebase-functions/v2';
-const request = require('request');
+import { onRequest } from 'firebase-functions/v2/https';
+import axios from 'axios';
 const fs = require('fs');
 const config = require('./config');
 const mentions: Map<string, string> = config.mentionlist;
 const statuslist: Map<string, string> = config.statuslist;
 const prstatuslist: Map<string, string> = config.prstatuslist;
 
-export const backlog = functions.https.onRequest((req, res) => {
+export const backlog = onRequest((req, res) => {
     if (req.method !== 'POST') {
         res.status(405).send('Method Not Allowed');
         return;
@@ -435,20 +435,17 @@ export const backlog = functions.https.onRequest((req, res) => {
         ]
     };
 
-    let options = {
-        uri: slack_url,
-        headers: {
-            "Content-type": "application/json",
-        },
-        json: true,
-        body: data
-    };
-    
-    request.post(options, function (err: any) {
-        if (err != null) {
+    if (slack_url) {
+        axios.post(slack_url, data, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).catch((err) => {
             console.log(err);
-        }
-    });
+        });
+    } else {
+        console.log("slack_url is not configured");
+    }
 
     res.send("OK");
 });
