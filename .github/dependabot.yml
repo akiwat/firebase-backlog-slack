@@ -12,5 +12,11 @@ updates:
         dependency-type: "production"
         patterns:
           - "firebase-*"
+        update-types:
+          - "minor"
+          - "patch"
       dev-dependencies:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
