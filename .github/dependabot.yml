@@ -7,6 +7,10 @@ updates:
     open-pull-requests-limit: 5
     allow:
       - dependency-type: "direct"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       firebase:
         dependency-type: "production"
