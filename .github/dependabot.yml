@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/functions"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+    groups:
+      firebase:
+        dependency-type: "production"
+        patterns:
+          - "firebase-*"
+      dev-dependencies:
+        dependency-type: "development"
