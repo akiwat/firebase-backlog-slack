@@ -19,6 +19,8 @@ const fieldLabels: { [key: string]: string } = {
     resolution: '完了理由',
     limitDate: '期限',
     startDate: '開始日',
+    start_date: '開始日',
+    reference_date: '基準日',
     summary: '件名',
     description: '説明',
     estimatedHours: '予定時間',
@@ -89,7 +91,8 @@ function issueMeta(content: any, full: boolean): string {
     if (full && content.dueDate != null) {
         parts.push(`期限: ${content.dueDate}`);
     }
-    return parts.length > 0 ? parts.join(' / ') + '\n' : '';
+    // 付加情報はインラインコードにして人のコメントと視覚的に分ける
+    return parts.length > 0 ? '`' + parts.join(' / ') + '`\n' : '';
 }
 
 // 共有ファイルの URL を組み立て、パスの // を正規化する
@@ -154,10 +157,11 @@ export const backlog = onRequest((req, res) => {
                 url = `${backlog_url}/view/${projectKey}-${content.key_id}`;
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[${projectKey}-${content.key_id}] - ${content.summary} > `;
-                text += issueMeta(content, true);
+                // 人の説明文（プレーン）を先に、付加情報（インラインコード）を後に
                 if (content.description != null) {
                     text += `${content.description}\n`;
                 }
+                text += issueMeta(content, true);
                 break;
             case 2:
                 label = '課題の更新';
@@ -170,7 +174,7 @@ export const backlog = onRequest((req, res) => {
                 }
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[${projectKey}-${content.key_id}] - ${content.summary} > `;
-                text += issueMeta(content, false);
+                // 更新は「人のコメント（プレーン）」＋「変更があったものだけ」（インラインコード）
                 if (content.comment != null && content.comment.content != null) {
                     text += `${content.comment.content}\n`;
                 }
@@ -215,11 +219,11 @@ export const backlog = onRequest((req, res) => {
                 url = `${backlog_url}/wiki/${projectKey}/${content.name}`;
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[[${projectKey}-Wiki-${content.name}]>`;
-                if (content.version != null) {
-                    text += `版数: ${content.version}\n`;
-                }
                 if (content.diff != null) {
                     text += `${content.diff}\n`;
+                }
+                if (content.version != null) {
+                    text += `\`版数: ${content.version}\`\n`;
                 }
                 break;
             case 7:
@@ -238,7 +242,7 @@ export const backlog = onRequest((req, res) => {
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[${projectKey}/${dispPath}]>`;
                 if (content.size != null) {
-                    text += `サイズ: ${content.size} bytes\n`;
+                    text += `\`サイズ: ${content.size} bytes\`\n`;
                 }
                 break;
             }
@@ -327,14 +331,16 @@ export const backlog = onRequest((req, res) => {
                 url = `${backlog_url}/git/${projectKey}/${content.repository.name}/pullRequests/${content.number}`;
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[${projectKey}-${content.repository.name}] - ${content.summary}>`;
-                if (content.branch != null && content.base != null) {
-                    text += `\`${content.branch} → ${content.base}\`\n`;
-                }
+                // 人の説明文（プレーン）を先に、付加情報（インラインコード）を後に
                 if (content.description != null) {
                     text += `${content.description}\n`;
                 }
+                // マージ方向は Backlog 表示に合わせて base ← branch（左向き）
+                if (content.base != null && content.branch != null) {
+                    text += `\`${content.base} ← ${content.branch}\`\n`;
+                }
                 if (content.assignee != null && content.assignee.name != null) {
-                    text += `担当: ${content.assignee.name}\n`;
+                    text += `\`担当: ${content.assignee.name}\`\n`;
                 }
                 if (content.issue != null && content.issue.key_id != null) {
                     const issueurl = `${backlog_url}/view/${projectKey}-${content.issue.key_id}`;
@@ -349,9 +355,7 @@ export const backlog = onRequest((req, res) => {
                 }
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `<${url}|[${projectKey}-${content.repository.name}] - ${content.summary}>`;
-                if (content.branch != null && content.base != null) {
-                    text += `\`${content.branch} → ${content.base}\`\n`;
-                }
+                // 更新は「人のコメント（プレーン）」＋「変更があったものだけ」（インラインコード）
                 if (content.comment != null && content.comment.content != null) {
                     text += `${content.comment.content}\n`;
                 }
@@ -378,11 +382,11 @@ export const backlog = onRequest((req, res) => {
                 label = 'マイルストーンの追加';
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `[${projectKey}] ${content.name}`;
-                if (content.start_date != null || content.reference_date != null) {
-                    text += `期間: ${content.start_date != null ? content.start_date : ''} 〜 ${content.reference_date != null ? content.reference_date : ''}\n`;
-                }
                 if (content.description != null && content.description !== '') {
                     text += `${content.description}\n`;
+                }
+                if (content.start_date != null || content.reference_date != null) {
+                    text += `\`期間: ${content.start_date != null ? content.start_date : ''} 〜 ${content.reference_date != null ? content.reference_date : ''}\`\n`;
                 }
                 break;
             case 23:
@@ -397,7 +401,7 @@ export const backlog = onRequest((req, res) => {
                 pretext = `*Backlog ${label}* _by ${userName}_\n`;
                 pretext += `[${projectKey}] ${content.name}`;
                 if (content.start_date != null || content.reference_date != null) {
-                    text += `期間: ${content.start_date != null ? content.start_date : ''} 〜 ${content.reference_date != null ? content.reference_date : ''}\n`;
+                    text += `\`期間: ${content.start_date != null ? content.start_date : ''} 〜 ${content.reference_date != null ? content.reference_date : ''}\`\n`;
                 }
                 break;
             case 36:
