@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Least-privilege default; the auto-merge job raises its own permissions.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build functions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+      # tsc compile check. Catches type/compile breakage from dependency bumps
+      # (e.g. firebase-functions 7.3.x needed skipLibCheck). config.ts / env are
+      # gitignored and only needed at runtime, so this does not run the function.
+      - run: npm run build
+
+  dependabot-automerge:
+    name: Auto-merge Dependabot (patch/minor)
+    needs: build
+    runs-on: ubuntu-latest
+    # Only for Dependabot PRs. If `build` fails, this job is skipped and the PR
+    # stays open for manual review — nothing broken is ever auto-merged.
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+      # Merge only patch and minor updates. Anything else (e.g. a security-driven
+      # major) is left open so a human decides.
+      - name: Merge patch/minor updates
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --merge --delete-branch "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
