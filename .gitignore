@@ -1,3 +1,6 @@
 .DS_Store
 .firebaserc
 *.log
+
+# Local-only Backlog webhook payload samples (reference; not tracked)
+/payload-samples/
