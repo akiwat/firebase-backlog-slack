@@ -5,6 +5,14 @@ const config = require('./config');
 const mentions: Map<string, string> = config.mentionlist;
 const statuslist: Map<string, string> = config.statuslist;
 const prstatuslist: Map<string, string> = config.prstatuslist;
+// 完了理由(resolution)は Backlog 共通の固定値
+const resolutionlist: Map<string, string> = new Map([
+    ['0', '対応済み'],
+    ['1', '対応しない'],
+    ['2', '無効'],
+    ['3', '重複'],
+    ['4', '再現しない'],
+]);
 
 // changes[].field -> 日本語ラベル
 const fieldLabels: { [key: string]: string } = {
@@ -62,12 +70,18 @@ function formatChanges(changes: any, statusMap: Map<string, string>): string {
                 const mapped = statusMap.get(s);
                 return mapped != null ? mapped : s;
             }
+            if (change.field === 'resolution') {
+                const mapped = resolutionlist.get(s);
+                return mapped != null ? mapped : s;
+            }
             return s;
         };
-        const before = conv(change.old_value);
         const after = conv(change.new_value);
-        if (before !== '') {
-            out += `\`${label}：${before} -> ${after}\`\n`;
+        // old_value キーがある変更(単体更新)は before -> after を表示（空は「未設定」）。
+        // まとめて更新は old_value キーが無いので after のみ。
+        if (Object.prototype.hasOwnProperty.call(change, 'old_value')) {
+            const before = conv(change.old_value);
+            out += `\`${label}：${before !== '' ? before : '未設定'} -> ${after !== '' ? after : '未設定'}\`\n`;
         } else {
             out += `\`${label}：${after}\`\n`;
         }
