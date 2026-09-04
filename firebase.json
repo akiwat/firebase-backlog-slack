@@ -1,6 +1,9 @@
 {
   "functions": {
-    "predeploy": "npm --prefix \"$RESOURCE_DIR\" run build",
+    "predeploy": [
+      "node \"$RESOURCE_DIR/scripts/deploy-guard.js\"",
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ],
     "source": "functions"
   },
   "hosting": {

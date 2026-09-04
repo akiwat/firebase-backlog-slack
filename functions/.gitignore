@@ -8,3 +8,6 @@ typings/
 node_modules/
 env.*.json
 config.ts
+
+# 手書きのデプロイ補助スクリプトはコンパイル出力ではないため追跡する
+!scripts/deploy-guard.js
